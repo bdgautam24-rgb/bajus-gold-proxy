@@ -1,24 +1,27 @@
 export default {
   async fetch(request) {
     const target = 'https://www.bajus.org/gold-price';
-    
-    // Request BD-only page
+
     const response = await fetch(target, {
       headers: {
-        'User-Agent': 'Mozilla/5.0',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
         'Accept': 'text/html',
         'Referer': 'https://www.bajus.org/'
       }
     });
-    
-    const html = await response.text();
-    
-    // Simple regex to extract gold price div (adjust selector as needed)
-    const match = html.match(/<div class="gold-price">([\s\S]*?)<\/div>/i);
-    const price = match ? match[1] : 'Price not found';
-    
-    return new Response(price, {
-      headers: { 'Content-Type': 'text/html', 'Access-Control-Allow-Origin': '*' }
+
+    // Clone response headers & remove security headers
+    const headers = new Headers(response.headers);
+    headers.delete('Content-Security-Policy');
+    headers.delete('X-Frame-Options');
+    headers.delete('Strict-Transport-Security');
+    headers.set('Access-Control-Allow-Origin', '*');
+
+    const body = await response.text();
+
+    return new Response(body, {
+      status: response.status,
+      headers
     });
   }
 };
